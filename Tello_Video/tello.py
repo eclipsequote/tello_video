@@ -96,15 +96,23 @@ class Tello:
 
         """
         packet_data = ""
+        packet_all = ""
+        i = 1
         while True:
             try:
                 res_string, ip = self.socket_video.recvfrom(2048)
                 packet_data += res_string
+                packet_all += res_string
                 # end of frame
                 if len(res_string) != 1460:
+                    if i == 500:
+                        with open("annexb/" + str(i) + ".h264", "wb")as fout:
+                            fout.write(packet_all)
+                    
                     for frame in self._h264_decode(packet_data):
                         self.frame = frame
                     packet_data = ""
+                    i += 1
 
             except socket.error as exc:
                 print ("Caught exception socket.error : %s" % exc)
@@ -119,6 +127,7 @@ class Tello:
         """
         res_frame_list = []
         frames = self.decoder.decode(packet_data)
+        print(len(frames))
         for framedata in frames:
             (frame, w, h, ls) = framedata
             if frame is not None:
